@@ -1,46 +1,25 @@
 import { useState, useEffect } from 'react'
-import Papa from 'papaparse'
 import Charts from './Charts'
-import SheetConfig from './SheetConfig'
-import PhotoGallery from './PhotoGallery'
+import ManualEntry from './ManualEntry'
 import './App.css'
 
 export default function App() {
-  const [data, setData] = useState([])
-  const [sheetUrl, setSheetUrl] = useState(localStorage.getItem('sheetUrl') || '')
+  const [data, setData] = useState(() => {
+    const saved = localStorage.getItem('fitnessData')
+    return saved ? JSON.parse(saved) : []
+  })
   const [activeTab, setActiveTab] = useState('charts')
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
 
-  const loadSheet = (url) => {
-    setLoading(true)
-    setError('')
-    
-    Papa.parse(url, {
-      header: true,
-      dynamicTyping: true,
-      complete: (results) => {
-        const filtered = results.data
-          .filter(row => row.Date)
-          .map(row => ({
-            Date: row.Date,
-            Weight: row.Weight,
-            'Body Fat %': row['Body Fat %'],
-            Protein: row.Protein,
-            Carbs: row.Carbs,
-            Fat: row.Fat
-          }))
-        
-        setData(filtered)
-        setSheetUrl(url)
-        localStorage.setItem('sheetUrl', url)
-        setLoading(false)
-      },
-      error: (err) => {
-        setError('Failed to load sheet: ' + err.message)
-        setLoading(false)
-      }
-    })
+  useEffect(() => {
+    localStorage.setItem('fitnessData', JSON.stringify(data))
+  }, [data])
+
+  const addEntry = (entry) => {
+    setData([...data, entry])
+  }
+
+  const deleteEntry = (index) => {
+    setData(data.filter((_, i) => i !== index))
   }
 
   return (
@@ -58,26 +37,19 @@ export default function App() {
           Charts
         </button>
         <button 
-          className={activeTab === 'photos' ? 'active' : ''}
-          onClick={() => setActiveTab('photos')}
+          className={activeTab === 'entry' ? 'active' : ''}
+          onClick={() => setActiveTab('entry')}
         >
-          Photos
-        </button>
-        <button 
-          className={activeTab === 'settings' ? 'active' : ''}
-          onClick={() => setActiveTab('settings')}
-        >
-          Settings
+          Add Entry
         </button>
       </nav>
 
       <main className="content">
         {activeTab === 'charts' && (
-          data.length > 0 ? <Charts data={data} /> : <p>No data loaded. Go to Settings.</p>
+          data.length > 0 ? <Charts data={data} /> : <p>No data yet. Go to "Add Entry" to get started!</p>
         )}
-        {activeTab === 'photos' && <PhotoGallery />}
-        {activeTab === 'settings' && (
-          <SheetConfig onLoad={loadSheet} loading={loading} error={error} />
+        {activeTab === 'entry' && (
+          <ManualEntry onAdd={addEntry} entries={data} onDelete={deleteEntry} />
         )}
       </main>
     </div>
