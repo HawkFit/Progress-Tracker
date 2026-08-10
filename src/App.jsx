@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import Charts from './Charts'
 import ManualEntry from './ManualEntry'
+import PhotoGallery from './PhotoGallery'
 import './App.css'
 
 export default function App() {
@@ -42,6 +43,12 @@ export default function App() {
         >
           Add Entry
         </button>
+        <button 
+          className={activeTab === 'photos' ? 'active' : ''}
+          onClick={() => setActiveTab('photos')}
+        >
+          Photos
+        </button>
       </nav>
 
       <main className="content">
@@ -51,6 +58,7 @@ export default function App() {
         {activeTab === 'entry' && (
           <ManualEntry onAdd={addEntry} entries={data} onDelete={deleteEntry} />
         )}
+        {activeTab === 'photos' && <PhotoGallery />}
       </main>
     </div>
   )
